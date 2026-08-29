@@ -1,0 +1,214 @@
+generated: '2026-08-28'
+method: derived
+source: >-
+  developer.specright.com — the Schemas section of the Specright API v1.1.0 reference
+  (14 schemas) plus the operation parameter tables, read 2026-08-28.
+docs: https://developer.specright.com/api-reference
+name: Specright API data model
+description: >-
+  Specright's API exposes a two-layer model. The outer layer is fixed and small: fourteen
+  schemas, of which the three business entities (specification, specfamily, supplier) are
+  structurally identical envelopes. The inner layer — the actual fields on a spec — is not
+  in the contract at all. It is per-tenant configuration, discoverable only at runtime
+  through the /definition endpoints. This is the defining characteristic of the model and
+  the reason a generic integration must be metadata-driven rather than schema-driven.
+
+  Underneath, the platform is Salesforce: records carry Salesforce IDs, field names carry
+  the specright__*__c managed-package prefix, upserts key on a Salesforce external ID, and
+  the recordtypes schema is the Salesforce record-type concept surfaced directly.
+
+entities:
+  - name: specification
+    endpoint_family: /specs
+    description: >-
+      A specification — the packaging component, raw material, ingredient, formula or other
+      spec'd item. Carries a fields[] array and a connections[] array.
+    id_field: Id (Salesforce record ID)
+    alternate_key: >-
+      A tenant-configured external ID field, named by the externalid query parameter.
+    properties:
+      - {name: fields, type: 'array[object]', of: 'field/label/value triple'}
+      - {name: connections, type: 'array[object]', of: connection}
+    observed_fields:
+      - {field: Id, label: Record ID, note: Salesforce 18-character ID}
+      - {field: Name, label: Internal Part ID}
+      - {field: specright__Description2__c, label: Description, note: managed-package custom field}
+
+  - name: specfamily
+    endpoint_family: /specfamilies
+    description: >-
+      A spec family — the BOM / finished-good object. The reference heads this section
+      "Endpoints for Spec Family/BOM/Finished Good Object". Structurally identical to
+      specification: fields[] plus connections[].
+    id_field: Id
+    alternate_key: tenant-configured external ID
+    properties:
+      - {name: fields, type: 'array[object]'}
+      - {name: connections, type: 'array[object]', of: connection}
+
+  - name: supplier
+    endpoint_family: /suppliers
+    description: >-
+      A supplier record. Differs from specification and specfamily in exactly one respect —
+      it has no connections[] array, so suppliers are a leaf in the published graph even
+      though specs plainly relate to them in the product.
+    id_field: Id
+    alternate_key: tenant-configured external ID
+    properties:
+      - {name: fields, type: 'array[object]'}
+
+  - name: object
+    endpoint_family: '/objects/{api-name}'
+    description: >-
+      The generic escape hatch. Any Specright object configured in the tenant is reachable
+      by its Salesforce API name through this family, with the same CRUD, files, definition
+      and bulk-job operations as the three named families. Shape is fields[] only.
+    properties:
+      - {name: fields, type: 'array[object]'}
+
+  - name: connection
+    description: >-
+      A materialized relationship as returned on a record. Names the related object family
+      and carries the related records as {Id, Name} stubs.
+    properties:
+      - name: name
+        type: any
+        enum: [specs, specfamilies]
+        note: >-
+          The published enumeration lists only specs and specfamilies, which is narrower
+          than the generic /objects surface suggests.
+      - {name: 'api-name', type: string, note: Salesforce API name of the related object}
+      - {name: records, type: 'array[object]', of: record}
+
+  - name: connectiondefn
+    description: >-
+      The definition-time counterpart of connection, returned inside objectdefinition.
+      Declares which relationships an object has and which field carries each.
+    properties:
+      - {name: name, type: string}
+      - {name: 'api-name', type: string}
+      - {name: field, type: string, note: the field on this object that holds the reference}
+
+  - name: record
+    description: A related-record stub.
+    properties:
+      - {name: Id, type: string}
+      - {name: Name, type: string}
+
+  - name: objectinfo
+    description: Descriptor for one Specright object.
+    properties:
+      - {name: label, type: string}
+      - {name: 'api-name', type: string}
+      - {name: description, type: string}
+      - {name: 'last-modified', type: string}
+      - {name: custom, type: boolean, note: distinguishes tenant-custom objects from standard ones}
+
+  - name: objectdefinition
+    description: >-
+      The runtime schema document. This is the most important schema in the API for an
+      agent: it is how the field vocabulary of a tenant is discovered.
+    properties:
+      - {name: 'object-info', type: objectinfo}
+      - {name: 'fields-list', type: object, note: 'the fields[] array of field/label/value triples'}
+      - {name: 'connections-list', type: connectiondefn}
+      - {name: 'recordtypes-list', type: recordtypes}
+
+  - name: recordtypes
+    description: Salesforce record types available on an object.
+    properties:
+      - {name: name, type: string}
+      - {name: id, type: string}
+
+  - name: fileinfo
+    description: File metadata, returned by the file-list operations.
+    properties:
+      - {name: id, type: string}
+      - {name: 'create-date', type: 'string(date-time)'}
+      - {name: 'expiration-date', type: 'string(date-time)'}
+      - {name: description, type: string}
+      - {name: extension, type: string}
+      - {name: 'file-type', type: string}
+      - {name: 'last-modified-by', type: string}
+      - {name: 'last-modified-date', type: 'string(date-time)'}
+      - {name: 'owner-username', type: string}
+      - {name: 'owner-name', type: string}
+      - {name: title, type: string}
+      - {name: url, type: string}
+      - {name: 'size-bytes', type: integer}
+
+  - name: file
+    description: fileinfo plus the file content.
+    extends: fileinfo
+    properties:
+      - {name: body, type: string, note: the file content; encoding is not documented}
+
+  - name: token
+    description: OAuth token response from POST /token.
+    properties:
+      - {name: access_token, type: string}
+      - {name: token_type, type: string}
+      - {name: expires_in, type: integer}
+      - {name: refresh_token, type: string}
+
+  - name: anyvalue
+    description: >-
+      The untyped value slot in every field triple. Every business value in this API passes
+      through anyvalue, so the contract carries no type information for any spec field —
+      types are tenant metadata, readable from /definition.
+
+relationships:
+  - {from: specification, to: connection, type: has_many, via: connections}
+  - {from: specfamily, to: connection, type: has_many, via: connections}
+  - {from: connection, to: record, type: has_many, via: records}
+  - {from: specfamily, to: specification, type: has_many, via: 'connections[].connection where name = specs'}
+  - {from: specification, to: specfamily, type: has_many, via: 'connections[].connection where name = specfamilies'}
+  - {from: objectdefinition, to: objectinfo, type: has_one, via: object-info}
+  - {from: objectdefinition, to: connectiondefn, type: has_many, via: connections-list}
+  - {from: objectdefinition, to: recordtypes, type: has_many, via: recordtypes-list}
+  - {from: specification, to: fileinfo, type: has_many, via: 'GET /specs/{id}/files'}
+  - {from: specfamily, to: fileinfo, type: has_many, via: 'GET /specfamilies/{id}/files'}
+  - {from: supplier, to: fileinfo, type: has_many, via: 'GET /suppliers/{id}/files'}
+  - {from: object, to: fileinfo, type: has_many, via: 'GET /objects/{api-name}/{id}/files'}
+  - {from: file, to: fileinfo, type: extends}
+
+identifiers:
+  primary: >-
+    Salesforce record IDs. The published example a0b3k00000ERfzhAAD is an 18-character
+    Salesforce ID; bulk job IDs use the 750 prefix (Salesforce AsyncApiJob), e.g.
+    7503k00000JZtffAAD.
+  alternate: >-
+    Tenant-configured external ID, selected per request by the externalid query parameter,
+    which names the Salesforce API Name of the field to key on.
+  field_naming: >-
+    Standard Salesforce fields appear unprefixed (Id, Name); Specright managed-package
+    fields carry the specright__ prefix and __c suffix.
+
+findings:
+  - id: schema-carries-no-business-fields
+    note: >-
+      Not one business field is declared in the contract. specification, specfamily, supplier
+      and object are all the same envelope of untyped field triples. The real schema lives
+      behind GET /{resource}/definition and varies per tenant. A consumer cannot generate
+      typed models from this API — it must read metadata first.
+  - id: suppliers-have-no-connections
+    note: >-
+      supplier is the only business entity without a connections[] array, so the
+      spec-to-supplier relationship every buyer cares about is not expressed in the
+      published graph.
+  - id: connection-enum-is-narrow
+    note: >-
+      connection.name enumerates only specs and specfamilies, which does not cover the
+      generic /objects/{api-name} surface.
+  - id: values-are-untyped
+    note: >-
+      Every value resolves to anyvalue. No formats, no enums, no numeric ranges, no units —
+      notable for a platform whose subject matter is dimensions, weights and materials.
+  - id: no-erd-render
+    note: No subway/ directory exists in this repo; there is no diagram to reference.
+
+statistics:
+  schemas: 14
+  business_entities: 4
+  relationships_declared: 13
+  typed_business_fields: 0

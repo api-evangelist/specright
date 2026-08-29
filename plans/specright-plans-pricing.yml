@@ -1,0 +1,65 @@
+generated: '2026-08-28'
+method: searched
+source: https://www.specright.com/plans-pricing/
+name: Specright plans and pricing
+description: >-
+  Specright publishes three named tiers and no prices. Every tier's call to action is "Get a
+  Quote" — there is no list price, no currency, no billing period, no seat or record quota,
+  and no published API allowance on any tier. The tier names and their target segments are
+  real published facts; everything commercial is behind a sales conversation.
+pricing_url: https://www.specright.com/plans-pricing/
+pricing_url_status: 200
+plan_count: 3
+public_pricing: false
+free_tier: false
+trial: not published
+self_service_signup: false
+currency: null
+billing_period: null
+plans:
+  - name: Specright Foundations
+    price: null
+    currency: null
+    billing_period: null
+    cta: Get a Quote
+    target: Small to mid-sized companies managing packaging data.
+    quota: not published
+    overage: not published
+    api_access: not stated
+  - name: Specright Plus
+    price: null
+    currency: null
+    billing_period: null
+    cta: Get a Quote
+    target: Scaling businesses needing unified product and packaging specifications.
+    quota: not published
+    overage: not published
+    api_access: not stated
+  - name: Specright Enterprise
+    price: null
+    currency: null
+    billing_period: null
+    cta: Get a Quote
+    target: Large, complex organizations across multiple business units.
+    quota: not published
+    overage: not published
+    api_access: not stated
+api_entitlement:
+  documented: false
+  note: >-
+    The pricing page does not say which tiers include API access, whether API calls are
+    metered, or whether the API is a paid add-on. The 2020 launch post says developer
+    accounts are granted to "customers and partners" on request, and the API reference
+    directs permission problems to api@specright.com — so API access appears to be
+    provisioned per account rather than purchased per tier, but Specright does not state this.
+acquisition_paths:
+  - {name: Request a demo, url: 'https://www.specright.com/request-a-demo/', status: 200}
+  - {name: Contact us, url: 'https://www.specright.com/contact-us/', status: 200}
+  - {name: Become a partner, url: 'https://www.specright.com/become-a-partner/', status: 200}
+findings:
+  - >-
+    Quote-only pricing across all three tiers means neither a buyer nor an agent can
+    estimate cost, and no rate or volume ceiling can be inferred from a plan.
+  - >-
+    Because no tier states an API allowance, there is no published relationship between what
+    a customer pays and what the API will let them do.

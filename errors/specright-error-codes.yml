@@ -1,0 +1,119 @@
+generated: '2026-08-28'
+method: derived
+source: >-
+  developer.specright.com — the Specright API v1.1.0 reference. Derived from the per-operation
+  "Responses" tables of all 46 documented operations, transcribed from the reference bundle
+  served by the developer portal on 2026-08-28.
+docs: https://developer.specright.com/api-reference
+name: Specright API error catalog
+description: >-
+  Specright documents status codes and human-readable meanings per operation, but publishes
+  no error-code registry, no error envelope schema and no RFC 9457 problem+json media type.
+  Failure responses are documented with Schema "None" on every operation except the bulk-job
+  400 and 406, where the schema is "Inline" and unspecified. The catalog below is therefore
+  a status-code catalog, not a code registry — that distinction is the finding.
+
+format: none
+problem_json: false
+rfc9457: false
+error_envelope:
+  documented: false
+  note: >-
+    Success responses use an envelope of {"data": [...], "success": true}. No failure-shape
+    counterpart is published, so an agent cannot know in advance whether a 400 returns
+    {"success": false, ...}, a bare string, or nothing at all. Only the bulk-job endpoints
+    hint at an inline error body, and its fields are not specified.
+retry_signal:
+  documented: false
+  note: No 429, no Retry-After, and no rate-limit headers appear anywhere in the reference.
+
+problem_types:
+  - status: 400
+    title: Bad Request
+    description: >-
+      The request was not accepted, possibly due to missing or inaccurate parameter.
+    schema: None
+    occurs_on: 39 of 46 operations
+    remediation: >-
+      Check required headers (x-user-id and x-api-key are both required), path parameters,
+      and the JSON syntax of the filter query parameter. The reference does not distinguish
+      a malformed filter from a missing header.
+    retryable: false
+  - status: 401
+    title: Unauthorized
+    description: Request was Unauthorized.
+    schema: None
+    occurs_on: all 46 operations
+    remediation: >-
+      Supply a valid x-api-key, or a bearer token from POST /v1/token. Tokens expire after
+      3600 seconds; refresh with the refresh_token grant. Confirmed live at the API root:
+      GET https://api.specright.com/v1 returns 401 with WWW-Authenticate: Bearer.
+    retryable: false
+  - status: 403
+    title: Forbidden
+    description: >-
+      The API Key does not have permission to perform the request. Please reach out to
+      api@specright.com for assistance.
+    schema: None
+    occurs_on: 45 of 46 operations (all except POST /token)
+    remediation: >-
+      This is the permission boundary, and it is the one an agent will hit most. Specright
+      evaluates access against the x-user-id principal as well as the key, so a 403 may mean
+      the acting user lacks record access rather than that the key is wrong. The documented
+      remedy is a support email — there is no self-service permissions view.
+    retryable: false
+  - status: 406
+    title: Not Acceptable
+    description: >-
+      The operation specified is not supported. Supported operations include insert, update,
+      upsert and delete.
+    schema: Inline
+    occurs_on: >-
+      the four bulk-job submission operations (POST /specs/bulkjob, POST /suppliers/bulkjob,
+      POST /specfamilies/bulkjob, POST /objects/{api-name}/bulkjob)
+    remediation: >-
+      Set the required operation query parameter to one of insert, update, upsert or delete.
+    retryable: false
+  - status: 422
+    title: Unprocessable Entity
+    description: >-
+      Returned by the file endpoints. The reference lists the status without a description.
+    schema: None
+    occurs_on: >-
+      the eight file operations — GET /{resource}/{id}/files and
+      GET /{resource}/{id}/files/{file-id} across specs, specfamilies, suppliers and objects.
+    remediation: >-
+      Undocumented. Most plausibly a file that exists as a record but cannot be served, but
+      Specright states nothing, so an agent should treat it as terminal and surface it.
+    retryable: false
+
+success_codes:
+  - status: 200
+    title: OK
+    description: Successful Operation.
+    occurs_on: 42 of 46 operations
+  - status: 202
+    title: Accepted
+    description: >-
+      Bulk Request Accepted. Status and Detail on the Request can be fetched using the job-id.
+    occurs_on: the four bulk-job submission operations
+    note: >-
+      The only asynchronous acceptance in the API. The 202 body carries job-id, created-by,
+      submission-timestamp, external-id, content-type, object, operation and status.
+
+statistics:
+  operations_documented: 46
+  distinct_error_statuses: 5
+  distinct_success_statuses: 2
+  operations_with_documented_error_schema: 4
+  named_error_codes: 0
+
+gaps:
+  - No machine-readable error taxonomy — zero named or numbered error codes.
+  - No 429 and no rate-limit or Retry-After headers documented anywhere.
+  - No 404 documented on any single-record GET, so the reference does not say what happens
+    when an id or external id does not resolve.
+  - No 5xx documented on any operation.
+  - The 422 on the file endpoints carries no description at all.
+  - Failure bodies have no published schema, so error handling cannot be generated from the
+    contract.

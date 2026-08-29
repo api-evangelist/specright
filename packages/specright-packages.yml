@@ -1,0 +1,103 @@
+generated: '2026-08-28'
+method: searched
+source: >-
+  Registry searches performed 2026-08-28 against registry.npmjs.org, pypi.org,
+  rubygems.org, crates.io, packagist.org and the NuGet search service, plus the GitHub
+  organization at https://github.com/Specright and the Specright developer portal.
+name: Specright client packages
+description: >-
+  Specright publishes no client libraries. Every public package registry was searched and
+  every one returned zero results, and the company's GitHub organization contains no public
+  repositories. Integrators call the REST API directly. This is a complete, checked absence,
+  not an unexamined gap.
+official_sdk_count: 0
+community_sdk_count: 0
+packages: []
+registries_searched:
+  - registry: npm
+    endpoint: 'https://registry.npmjs.org/-/v1/search?text=specright'
+    status: 200
+    results: 0
+    version: null
+    published: null
+    note: Zero packages matching "specright". No scoped @specright organization exists.
+  - registry: pypi
+    endpoint: 'https://pypi.org/pypi/specright/json'
+    status: 404
+    results: 0
+    version: null
+    published: null
+  - registry: rubygems
+    endpoint: 'https://rubygems.org/api/v1/search.json?query=specright'
+    status: 200
+    results: 0
+    version: null
+    published: null
+  - registry: crates.io
+    endpoint: 'https://crates.io/api/v1/crates?q=specright'
+    status: 200
+    results: 0
+    version: null
+    published: null
+  - registry: packagist
+    endpoint: 'https://packagist.org/search.json?q=specright'
+    status: 200
+    results: 0
+    version: null
+    published: null
+  - registry: nuget
+    endpoint: 'https://azuresearch-usnc.nuget.org/query?q=specright'
+    status: 200
+    results: 0
+    version: null
+    published: null
+    note: totalHits 0.
+  - registry: maven-central
+    endpoint: not queried
+    results: 0
+    version: null
+    published: null
+    note: >-
+      Not probed. Every other registry returned zero and no Java SDK is referenced anywhere
+      in Specright's docs, so a Maven coordinate could not be guessed to query. Recorded as
+      unchecked rather than as a zero.
+  - registry: go
+    endpoint: not queried
+    results: 0
+    version: null
+    published: null
+    note: >-
+      Not probed for the same reason — proxy.golang.org requires a known module path, and
+      Specright publishes no repository to derive one from.
+source_repositories:
+  github_organization: https://github.com/Specright
+  github_org_status: 200
+  public_repos: 0
+  org_created: '2019-01-10'
+  note: >-
+    The organization exists and has existed since January 2019, but it has zero public
+    repositories — no SDK, no examples, no Postman collection, no spec. Because it publishes
+    nothing and Specright does not link to it from any public page, no GitHubOrganization
+    pointer is emitted for it.
+code_samples:
+  published: true
+  languages: [shell, http, javascript, node, ruby, python, java, go]
+  location: https://developer.specright.com/api-reference
+  note: >-
+    The API reference emits per-operation code samples in eight languages (a widdershins
+    feature). These are inline request snippets built on each language's stock HTTP client,
+    not a distributed library — there is nothing to install or version.
+postman:
+  published_collection: false
+  note: >-
+    The developer portal can generate a Postman collection and environment file client-side
+    from the request currently in view, using the v2.1.0 collection schema. That is an export
+    feature, not a published collection or workspace, so no Postman pointer is emitted.
+findings:
+  - >-
+    Zero first-party SDKs across six registries, and zero public repositories in a GitHub
+    organization that has been open for seven years.
+  - >-
+    For an API whose response envelope is an array of untyped field/label/value triples
+    requiring a runtime /definition lookup before use, the absence of any client library is a
+    meaningful adoption cost — every integrator writes the same metadata-resolution layer.

@@ -1,0 +1,257 @@
+generated: '2026-08-28'
+method: derived
+source: >-
+  developer.specright.com — the Specright API v1.1.0 reference (all 46 operations,
+  parameter tables and schema section), read 2026-08-28; plus live probes of
+  api.specright.com and test.specright.com.
+docs: https://developer.specright.com/api-reference
+name: Specright API conventions
+description: >-
+  Cross-cutting runtime semantics for the Specright API. The API is unusually consistent —
+  four resource families (specs, specfamilies, suppliers and a generic objects endpoint)
+  share one identical operation shape, one parameter vocabulary and one response envelope.
+  What it lacks is equally consistent: no idempotency key, no rate-limit signalling, no
+  webhooks, no deprecation policy and no documented reversal for any write.
+
+auth_style:
+  primary: API key in the x-api-key header plus a required x-user-id acting-principal header
+  alternative: Bearer JWT from POST /v1/token (expires_in 3600)
+  see: ../authentication/specright-authentication.yml
+
+versioning:
+  style: path
+  current: v1
+  spec_version: 1.1.0
+  base: https://api.specright.com/v1
+  note: >-
+    The version lives in the path. The reference titles itself "Specright API v1.1.0", so a
+    minor version is tracked in the document while the path stays at v1. No version header,
+    no date-pinned versions, no version negotiation.
+
+response_envelope:
+  collection: '{"data": [ {...}, {...} ], "success": true}'
+  record: >-
+    Records are returned as {"fields": [{"field": ..., "label": ..., "value": ...}]} — an
+    array of field triples, not a JSON object keyed by field name.
+  note: >-
+    The field/label/value triple is the defining shape of this API and the thing an
+    integrator must design around. "field" carries the Salesforce API name (Id, Name,
+    specright__Description2__c), "label" carries the tenant's human label ("Record ID",
+    "Internal Part ID", "Description") and "value" is untyped (schema anyvalue). Because
+    values are positional inside an array rather than keyed, a consumer must scan the array
+    to find a field rather than index into it, and no field is guaranteed present.
+  error: not documented — see ../errors/specright-error-codes.yml
+
+pagination:
+  style: offset
+  params:
+    - name: skip
+      in: query
+      type: integer(int32)
+      description: number of records to skip for pagination
+    - name: limit
+      in: query
+      type: integer(int32)
+      description: maximum number of records to return
+  applies_to: >-
+    the four collection GETs — GET /specs, GET /specfamilies, GET /suppliers,
+    GET /objects/{api-name}
+  default_limit: not documented
+  max_limit: not documented
+  total_count: not returned
+  cursor: none
+  gap: >-
+    The response envelope carries no total, no next link and no has_more flag, and neither
+    the default nor the maximum limit is published. An agent paginating this API cannot tell
+    when it has reached the end except by receiving a short page, and cannot size its first
+    request against a known ceiling.
+
+filtering:
+  param: filter
+  type: string(application/json)
+  description: search criteria specified in json format
+  gap: >-
+    The filter grammar is not published. The parameter is typed as a JSON string and
+    described in one line; no operators, field-name rules or examples of a composed filter
+    appear in the reference. This is the single largest documentation gap in the API — the
+    query capability exists but cannot be used from the contract alone.
+
+sorting:
+  param: sort
+  format: 'sort=field[:asc/:desc][,]'
+  description: Comma-separated field list, each optionally suffixed with :asc or :desc.
+  default_direction: not documented
+
+sparse_fieldsets:
+  param: fields
+  description: comma-separated list of fields to return in the response
+  applies_to: all collection GETs and all single-record GETs
+  note: >-
+    A real sparse-fieldset facility, which matters here because the field/label/value
+    envelope is verbose — a spec record returns every configured field unless narrowed.
+
+field_metadata:
+  endpoints:
+    - GET /specs/definition
+    - GET /specfamilies/definition
+    - GET /suppliers/definition
+    - GET /objects/{api-name}/definition
+    - GET objects/definition
+  note: >-
+    Every resource family exposes a /definition endpoint returning its field metadata, and a
+    tenant-wide objects/definition lists the objects available. This is the API's discovery
+    mechanism and it is genuinely useful to an agent: because Specright tenants configure
+    their own objects and fields, the field vocabulary is not knowable from the contract and
+    must be read at runtime from /definition before any read or write is composed.
+  agent_note: >-
+    Treat /definition as a required first call, not an optional one.
+
+external_ids_and_upsert:
+  params:
+    - name: externalid
+      in: query
+      description: >-
+        The Salesforce API Name of the field to use as the external ID, in place of the
+        internal record ID.
+    - name: operation
+      in: query
+      enum: [update, upsert]
+      description: >-
+        The operation to perform when an external ID is provided. If an external ID is
+        provided and operation is absent, an upsert is assumed.
+  applies_to: 'PATCH /specs/{id}, /specfamilies/{id}, /suppliers/{id}, /objects/{api-name}/{id}'
+  note: >-
+    Documented verbatim: "You can provide either the Salesforce unique ID or the external ID
+    that is configured on the specs object. With the external ID you can choose to perform
+    either an upsert (default behavior) or update operation on the record."
+  agent_warning: >-
+    The default is the destructive-by-omission one. Omitting operation on an external-ID
+    PATCH creates the record if it does not exist. An agent that intends to update only must
+    send operation=update explicitly.
+
+idempotency:
+  supported: false
+  header: null
+  scope: null
+  retention: null
+  note: >-
+    Specright publishes no idempotency key, no request-deduplication header and no replay
+    semantics. The word "idempotent" does not appear anywhere in the reference.
+  partial_substitute: >-
+    Upsert-by-external-ID (PATCH with externalid) is naturally idempotent at the record
+    level: replaying the same upsert converges on the same state. This is a property of the
+    operation, not a delivery guarantee — it does not protect POST /specs (which has no
+    external-ID form and will create duplicates on retry), and it does not protect bulk-job
+    submission, where a retried POST /{resource}/bulkjob creates a second job.
+  agent_note: >-
+    For safe retries, prefer PATCH with externalid over POST. There is no safe automatic
+    retry for POST or for bulk-job submission.
+
+reversibility:
+  state: none
+  grade: none
+  write_surface: true
+  note: >-
+    The API has a substantial write surface — 4 creates, 4 updates, 4 deletes and 4 bulk
+    submissions that themselves accept a delete operation — and documents no reversal path
+    for any of it. There is no undo, restore, trash, recycle-bin, cancel or rollback
+    operation among the 46. No retention window is stated for deleted records, and the bulk
+    job endpoints expose only status and details, not cancellation.
+  write_operations:
+    - operation: 'POST /specs, /specfamilies, /suppliers, /objects/{api-name}'
+      effect: create
+      reversal: none documented
+      window: none stated
+    - operation: 'PATCH /specs/{id}, /specfamilies/{id}, /suppliers/{id}, /objects/{api-name}/{id}'
+      effect: update or upsert
+      reversal: none documented
+      window: none stated
+      note: >-
+        No prior-value echo in the response, so an agent cannot even reconstruct the
+        pre-update state from the call it made.
+    - operation: 'DELETE /specs/{id}, /specfamilies/{id}, /suppliers/{id}, /objects/{api-name}/{id}'
+      effect: delete
+      reversal: none documented
+      window: none stated
+      note: >-
+        Returns 200 with schema None. Nothing states whether the delete is soft or hard.
+        Specright is built on Salesforce, whose platform provides a 15-day recycle bin, but
+        Specright does not document that as an API-level guarantee and it is not exposed
+        through any of the 46 operations — so it must not be relied on.
+    - operation: 'POST /{resource}/bulkjob with operation=delete'
+      effect: bulk delete of every row in an uploaded CSV
+      reversal: none documented
+      window: none stated
+      cancellation: >-
+        Not available. GET /{resource}/bulkjob/{job-id}/status and /details report on a job;
+        no endpoint stops one. Once accepted (202) a bulk delete runs to completion.
+      note: >-
+        This is the highest-consequence operation in the API and it is the least reversible:
+        unbounded blast radius from a single CSV, no cancel, no undo, no stated retention.
+  agent_guidance: >-
+    Treat every write as irreversible. Read the current record before any PATCH and retain
+    it locally if the change may need backing out. Do not use bulk delete from an agent
+    without a human confirmation step.
+  dry_run_mode:
+    supported: false
+    note: >-
+      No dry-run, validate-only or preview parameter on any write operation, and no
+      validation endpoint for a bulk CSV before submission.
+
+bulk_operations:
+  pattern: asynchronous job
+  submit: 'POST /{resource}/bulkjob (202 Accepted)'
+  poll_status: 'GET /{resource}/bulkjob/{job-id}/status'
+  poll_details: 'GET /{resource}/bulkjob/{job-id}/details'
+  operations: [insert, update, upsert, delete]
+  content_type: CSV (contenttype query parameter)
+  payload: multipart file upload (body.file, string(binary))
+  job_record_fields:
+    [job-id, created-by, submission-timestamp, external-id, content-type, object, operation, status]
+  observed_status_value: InProgress
+  gaps:
+    - No documented polling interval or backoff guidance.
+    - The full set of status values is not published — only InProgress appears in the example.
+    - No callback or webhook on completion, so polling is the only completion signal.
+    - No cancellation endpoint.
+    - No documented file-size or row-count ceiling.
+
+file_access:
+  list: 'GET /{resource}/{id}/files'
+  fetch: 'GET /{resource}/{id}/files/{file-id}'
+  note: >-
+    Read-only. There is no upload counterpart — files can be listed and retrieved through
+    the API but not attached to a record through it.
+
+request_id_tracing:
+  supported: false
+  note: >-
+    No request-id, correlation-id or trace header is documented on any request or response.
+    An agent has no identifier to quote when escalating a failure to api@specright.com,
+    which is the documented remedy for a 403.
+
+rate_limit_signalling:
+  supported: false
+  see: ../rate-limits/specright-rate-limits.yml
+
+webhooks:
+  supported: false
+  note: >-
+    No webhook, callback, event or subscription surface is documented. All change detection
+    is poll-based, and there is no documented modified-since filter to make polling cheap —
+    though the generic filter parameter may permit one against a timestamp field.
+
+cors:
+  documented: false
+
+environments:
+  production: https://api.specright.com/v1
+  sandbox: https://test.specright.com/v1
+  see: ../sandbox/specright-sandbox.yml
+
+cross_links:
+  errors: ../errors/specright-error-codes.yml
+  lifecycle: ../lifecycle/specright-lifecycle.yml
+  authentication: ../authentication/specright-authentication.yml
+  rate_limits: ../rate-limits/specright-rate-limits.yml
+  data_model: ../data-model/specright-data-model.yml

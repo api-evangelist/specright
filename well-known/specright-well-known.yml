@@ -1,0 +1,211 @@
+generated: '2026-08-28'
+method: probed
+source: >-
+  Direct HTTP probe of every Specright host on 2026-08-28: www.specright.com (marketing
+  site + WordPress REST/MCP), api.specright.com (production API), test.specright.com
+  (sandbox API), developer.specright.com (developer portal SPA) and login.specright.com
+  (Keycloak identity provider).
+name: Specright well-known documents
+description: >-
+  Specright serves real /.well-known documents from two hosts. login.specright.com
+  publishes a full Keycloak OpenID Connect discovery document for the "Specright" realm
+  (the identity provider behind the api.specright.com bearer-token flow), and
+  www.specright.com publishes RFC 8414 authorization-server metadata plus an RFC 9728
+  protected-resource document that advertise an OAuth-protected Model Context Protocol
+  server on the marketing site's WordPress REST API. The API host itself
+  (api.specright.com) serves no /.well-known documents at all.
+
+hosts:
+  - host: login.specright.com
+    note: >-
+      Keycloak identity provider. The realm-scoped discovery paths answer; the host-root
+      /.well-known/* paths return a Keycloak 404 JSON body ("Unable to find matching
+      target resource"), which is the expected shape for a realm-scoped deployment.
+    documents:
+      - path: /realms/Specright/.well-known/openid-configuration
+        status: 200
+        content_type: application/json
+        file: specright-login-openid-configuration.json
+        note: >-
+          Full OIDC discovery document for the Specright realm. Feeds
+          authentication/specright-authentication.yml and scopes/specright-scopes.yml.
+      - path: /realms/Specright/.well-known/oauth-authorization-server
+        status: 200
+        content_type: application/json
+        file: specright-login-oauth-authorization-server.json
+        note: >-
+          RFC 8414 authorization-server metadata. Byte-identical to the OIDC discovery
+          document above, which is standard Keycloak behaviour.
+      - path: /.well-known/openid-configuration
+        status: 404
+        file: null
+      - path: /.well-known/oauth-authorization-server
+        status: 404
+        file: null
+      - path: /.well-known/security.txt
+        status: 404
+        file: null
+      - path: /.well-known/api-catalog
+        status: 404
+        file: null
+      - path: /.well-known/agent-card.json
+        status: 404
+        file: null
+      - path: /.well-known/agent.json
+        status: 404
+        file: null
+      - path: /.well-known/ai-plugin.json
+        status: 404
+        file: null
+
+  - host: www.specright.com
+    note: >-
+      WordPress (Pantheon origin behind Cloudflare). The two OAuth documents are served
+      by the WordPress MCP adapter plugin and are the discovery surface for the MCP
+      server at /wp-json/mcp/mcp-oauth-server. Both paths 301 to a trailing-slash form
+      before returning 200, so a probe that does not follow redirects records a false
+      miss. Note the site's robots.txt disallows /wp-json/, so the MCP endpoint the
+      protected-resource document names is itself excluded from crawlers.
+    documents:
+      - path: /.well-known/oauth-authorization-server
+        status: 200
+        content_type: application/json
+        file: specright-www-oauth-authorization-server.json
+        note: >-
+          RFC 8414 metadata. Declares scopes_supported ["mcp"], PKCE S256, authorization_code
+          + refresh_token grants, and client_id_metadata_document_supported: true. Token
+          endpoint auth method is "none" (public clients only).
+      - path: /.well-known/oauth-protected-resource
+        status: 200
+        content_type: application/json
+        file: specright-www-oauth-protected-resource.json
+        note: >-
+          RFC 9728 protected-resource metadata naming
+          https://www.specright.com/wp-json/mcp/mcp-oauth-server as the protected resource.
+          This is the document the MCP server's 401 WWW-Authenticate header points at.
+      - path: /.well-known/security.txt
+        status: 404
+        file: null
+      - path: /.well-known/openid-configuration
+        status: 404
+        file: null
+      - path: /.well-known/api-catalog
+        status: 404
+        file: null
+      - path: /.well-known/agent-card.json
+        status: 404
+        file: null
+      - path: /.well-known/agent.json
+        status: 404
+        file: null
+      - path: /.well-known/ai-plugin.json
+        status: 404
+        file: null
+
+  - host: api.specright.com
+    note: >-
+      Production API host. Serves no /.well-known documents; every path returns a
+      zero-length 404. The host is demonstrably live — /health returns "HEALTHY" (200)
+      and /v1 returns 401 with WWW-Authenticate: Bearer.
+    documents:
+      - path: /.well-known/security.txt
+        status: 404
+        file: null
+      - path: /.well-known/openid-configuration
+        status: 404
+        file: null
+      - path: /.well-known/oauth-authorization-server
+        status: 404
+        file: null
+      - path: /.well-known/oauth-protected-resource
+        status: 404
+        file: null
+      - path: /.well-known/api-catalog
+        status: 404
+        file: null
+      - path: /.well-known/agent-card.json
+        status: 404
+        file: null
+      - path: /.well-known/agent.json
+        status: 404
+        file: null
+      - path: /.well-known/ai-plugin.json
+        status: 404
+        file: null
+
+  - host: test.specright.com
+    note: >-
+      Sandbox API host, same behaviour as production: no /.well-known documents,
+      /health returns 200, /v1 returns 401.
+    documents:
+      - path: /.well-known/security.txt
+        status: 404
+        file: null
+      - path: /.well-known/oauth-authorization-server
+        status: 404
+        file: null
+      - path: /.well-known/oauth-protected-resource
+        status: 404
+        file: null
+      - path: /.well-known/api-catalog
+        status: 404
+        file: null
+      - path: /.well-known/agent-card.json
+        status: 404
+        file: null
+      - path: /.well-known/agent.json
+        status: 404
+        file: null
+
+  - host: developer.specright.com
+    note: >-
+      SPA catch-all. EVERY path under this host — including every /.well-known/* path
+      and /llms.txt — returns HTTP 200 with the same 3,177-byte React shell
+      (<!doctype html> ... <div id="root">). None of these are documents; all are
+      recorded as misses. This is the dominant false-positive shape the pipeline warns
+      about, and it is present here on all nine probed paths.
+    documents:
+      - path: /.well-known/security.txt
+        status: 200
+        file: null
+        note: SPA HTML shell, not a document. Recorded as a miss.
+      - path: /.well-known/openid-configuration
+        status: 200
+        file: null
+        note: SPA HTML shell, not a document. Recorded as a miss.
+      - path: /.well-known/oauth-authorization-server
+        status: 200
+        file: null
+        note: SPA HTML shell, not a document. Recorded as a miss.
+      - path: /.well-known/oauth-protected-resource
+        status: 200
+        file: null
+        note: SPA HTML shell, not a document. Recorded as a miss.
+      - path: /.well-known/api-catalog
+        status: 200
+        file: null
+        note: SPA HTML shell, not a document. Recorded as a miss.
+      - path: /.well-known/agent-card.json
+        status: 200
+        file: null
+        note: SPA HTML shell, not a document. Recorded as a miss.
+      - path: /.well-known/agent.json
+        status: 200
+        file: null
+        note: SPA HTML shell, not a document. Recorded as a miss.
+      - path: /.well-known/ai-plugin.json
+        status: 200
+        file: null
+        note: SPA HTML shell, not a document. Recorded as a miss.
+
+summary:
+  hosts_probed: 5
+  paths_probed: 41
+  documents_served: 4
+  security_txt: false
+  api_catalog: false
+  agent_card: false
+  ai_plugin: false
+  openid_configuration: true
+  oauth_authorization_server: true
+  oauth_protected_resource: true

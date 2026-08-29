@@ -1,0 +1,75 @@
+generated: '2026-08-28'
+method: probed
+source: >-
+  Host and environment references found in the Specright developer portal's client bundle,
+  confirmed by direct probe of test.specright.com on 2026-08-28.
+name: Specright sandbox environment
+description: >-
+  Specright runs a separate sandbox host, test.specright.com, mirroring the production API.
+  It is live and reachable but entirely undocumented: it appears in the developer portal's
+  own client code as the non-production environment, and it is not named in the API
+  reference, on the marketing site or in any published guide. Access requires credentials
+  Specright issues — the sandbox is a separate tenant, not an open playground.
+environments:
+  - name: production
+    base_url: https://api.specright.com/v1
+    token_url: https://api.specright.com/v1/token
+    health: https://api.specright.com/health
+    probes:
+      - {url: 'https://api.specright.com/health', status: 200, body: HEALTHY}
+      - {url: 'https://api.specright.com/v1', status: 401, note: 'WWW-Authenticate: Bearer'}
+  - name: sandbox
+    base_url: https://test.specright.com/v1
+    token_url: https://test.specright.com/token
+    health: https://test.specright.com/health
+    probes:
+      - {url: 'https://test.specright.com/health', status: 200, body: HEALTHY}
+      - {url: 'https://test.specright.com/v1', status: 401}
+      - {url: 'https://test.specright.com/token', status: 405, note: 'Method not allowed on GET; POST is the documented method.'}
+    note: >-
+      Behaves identically to production at the edge — same 401 on /v1, same health endpoint.
+      Confirms a real parallel deployment rather than a redirect or a parked host.
+switching:
+  mechanism: base URL
+  note: >-
+    The only difference between environments is the host. There is no test-mode key prefix,
+    no mode flag on the credential and no header that selects an environment, so a
+    credential and a base URL must be kept in step by the caller. A production key pointed
+    at the sandbox host (or the reverse) simply fails authentication rather than warning.
+key_prefixes:
+  documented: false
+  note: >-
+    Specright does not publish a test-vs-live key prefix convention. Nothing in a key
+    identifies which environment it belongs to — a meaningful safety gap for an agent
+    holding both.
+test_data:
+  fixtures: not published
+  seeded_data: not published
+  note: >-
+    No test fixtures, sample records, magic identifiers or seeded tenant data are published.
+    A sandbox tenant presumably starts empty or is provisioned by Specright.
+test_clock: not available
+triggers: not available
+documentation:
+  published: false
+  note: >-
+    The sandbox is not mentioned in the API reference at all. Its existence was established
+    from the developer portal's own client bundle (which carries both a production and a
+    test environment configuration) and then confirmed by probe. Documenting it would be a
+    cheap and material improvement.
+access:
+  self_service: false
+  how: >-
+    Via the same route as production credentials — Specright issues developer accounts to
+    customers and partners on request (api@specright.com / the developer contact form).
+console:
+  developer_portal: https://developer.specright.com/
+  note: >-
+    The developer portal includes an interactive assistant that composes requests and can
+    export a Postman collection and environment. That export is generated client-side by the
+    portal from the request being viewed; it is not a published Postman collection, so it is
+    not recorded as one.
+findings:
+  - A real, live, parallel sandbox environment that the documentation never mentions.
+  - No key-prefix or mode marker distinguishes sandbox credentials from production ones.
+  - No test fixtures, test clock, or trigger tooling.

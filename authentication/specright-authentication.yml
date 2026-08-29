@@ -1,0 +1,169 @@
+generated: '2026-08-28'
+method: searched
+source: >-
+  https://developer.specright.com/ (the Specright API v1.1.0 reference, served inside the
+  developer portal's JavaScript bundle) and
+  https://login.specright.com/realms/Specright/.well-known/openid-configuration (200,
+  probed 2026-08-28).
+docs: https://developer.specright.com/
+name: Specright API authentication
+description: >-
+  The Specright API v1.1.0 accepts three authentication schemes and layers a mandatory
+  caller-identity header on top of all of them. Every business operation additionally
+  requires x-user-id, which is not a security scheme in the OpenAPI sense but is marked
+  required on all 45 non-token operations — an agent that supplies only a credential will
+  be rejected.
+
+api_base: https://api.specright.com/v1
+sandbox_base: https://test.specright.com/v1
+
+schemes:
+  - id: ApiKeyAuth
+    type: apiKey
+    in: header
+    name: x-api-key
+    description: >-
+      API key granted by Specright to access the API. Documented as required on every
+      operation outside /token. Keys are issued by Specright to customers and partners —
+      there is no self-service key issuance.
+    applied_to: >-
+      All 45 operations under /specs, /specfamilies, /suppliers and /objects, including
+      every bulk-job operation.
+    evidence: >-
+      Reference lists "x-api-key | header | string | true | api key granted by Specright to
+      access the API" on each operation, and closes each with "To perform this operation,
+      you must be authenticated by means of one of the following methods: ApiKeyAuth,
+      BearerAuth".
+  - id: BearerAuth
+    type: http
+    scheme: bearer
+    bearer_format: JWT
+    description: >-
+      Access token obtained from POST /v1/token. Accepted as an alternative to the API key
+      on all business operations. Confirmed live: an anonymous GET
+      https://api.specright.com/v1 returns 401 with the response header
+      "WWW-Authenticate: Bearer".
+    evidence: 'Probed 2026-08-28: https://api.specright.com/v1 -> 401, www-authenticate: Bearer'
+  - id: BasicAuth
+    type: http
+    scheme: basic
+    description: >-
+      Used exclusively to call the token endpoint. POST /v1/token is the only operation
+      whose documented method is BasicAuth.
+    applied_to: [POST /token]
+
+required_headers:
+  - name: x-user-id
+    in: header
+    required: true
+    description: >-
+      "userid of the user making the request" — the Specright user the call acts as. Marked
+      required: true on all 45 business operations. This is a second, orthogonal identity
+      axis: the API key or bearer token authenticates the integration, x-user-id selects
+      the acting principal, and Specright's Salesforce-side record permissions are then
+      evaluated against that user.
+    agent_note: >-
+      An agent must be given BOTH a credential and a Specright user identity. A 403 on a
+      well-formed request most often means the x-user-id principal lacks record access,
+      not that the key is wrong.
+  - name: x-api-key
+    in: header
+    required: true
+    description: See ApiKeyAuth above. Documented as required even where BearerAuth is used.
+
+token_endpoint:
+  operation: POST /token
+  url: https://api.specright.com/v1/token
+  auth: BasicAuth
+  content_type: application/x-www-form-urlencoded
+  request_fields:
+    - name: grant_type
+      type: string
+      required: false
+    - name: refresh_token
+      type: string
+      required: false
+  response_fields:
+    - name: access_token
+      type: string
+      format: JWT
+    - name: token_type
+      type: string
+      value: bearer
+    - name: expires_in
+      type: integer
+      value: 3600
+      note: One hour. An agent holding a long-running session must refresh.
+    - name: refresh_token
+      type: string
+  responses: {200: token, 400: Bad Request, 401: Unauthorized}
+
+identity_provider:
+  vendor: Keycloak
+  issuer: https://login.specright.com/realms/Specright
+  realm: Specright
+  discovery: https://login.specright.com/realms/Specright/.well-known/openid-configuration
+  discovery_status: 200
+  token_endpoint: https://login.specright.com/realms/Specright/protocol/openid-connect/token
+  authorization_endpoint: https://login.specright.com/realms/Specright/protocol/openid-connect/auth
+  introspection_endpoint: https://login.specright.com/realms/Specright/protocol/openid-connect/token/introspect
+  userinfo_endpoint: https://login.specright.com/realms/Specright/protocol/openid-connect/userinfo
+  revocation_endpoint: https://login.specright.com/realms/Specright/protocol/openid-connect/revoke
+  end_session_endpoint: https://login.specright.com/realms/Specright/protocol/openid-connect/logout
+  jwks_uri: https://login.specright.com/realms/Specright/protocol/openid-connect/certs
+  registration_endpoint: https://login.specright.com/realms/Specright/clients-registrations/openid-connect
+  device_authorization_endpoint: https://login.specright.com/realms/Specright/protocol/openid-connect/auth/device
+  grant_types_supported:
+    - authorization_code
+    - client_credentials
+    - implicit
+    - password
+    - refresh_token
+    - 'urn:ietf:params:oauth:grant-type:device_code'
+    - 'urn:ietf:params:oauth:grant-type:jwt-bearer'
+    - 'urn:ietf:params:oauth:grant-type:token-exchange'
+    - 'urn:ietf:params:oauth:grant-type:uma-ticket'
+    - 'urn:openid:params:grant-type:ciba'
+  token_endpoint_auth_methods_supported:
+    - private_key_jwt
+    - client_secret_basic
+    - client_secret_post
+    - tls_client_auth
+    - client_secret_jwt
+  code_challenge_methods_supported: [plain, S256]
+  id_token_signing_alg_values_supported:
+    [PS384, RS384, EdDSA, ES384, HS256, HS512, ES256, RS256, HS384, ES512, PS256, PS512, RS512]
+  note: >-
+    The developer portal's own JavaScript posts to this Keycloak token endpoint with scope
+    "specright-api", so the Keycloak realm — not just the /v1/token shim — is the real
+    authorization server behind the bearer flow. mutualTLS (tls_client_auth) and
+    private_key_jwt are both advertised, which is a stronger client-authentication posture
+    than the API-key path the docs lead with.
+
+separate_oauth_surface:
+  host: www.specright.com
+  issuer: https://www.specright.com
+  purpose: >-
+    A completely distinct OAuth authorization server, published by the WordPress MCP
+    adapter on the marketing site. Scope "mcp", PKCE S256, public clients only
+    (token_endpoint_auth_methods_supported: ["none"]). It has nothing to do with
+    api.specright.com and must not be confused with the Keycloak realm above.
+  see: ../mcp/specright-mcp.yml
+
+onboarding:
+  self_service: false
+  how_to_get_credentials: >-
+    Specright issues API keys and developer accounts to customers and partners on request.
+    The 2020-02-13 launch post directs prospective developers to a contact form, and the
+    reference's 403 description says "Please reach out to api@specright.com for assistance".
+  contact: api@specright.com
+  portal: https://developer.specright.com/
+
+gaps:
+  - No published OpenAPI document, so securitySchemes cannot be read machine-side; every
+    field above is transcribed from the rendered reference or from the live OIDC document.
+  - The reference declares both ApiKeyAuth and BearerAuth as acceptable on the same
+    operations but never states precedence when both headers are sent.
+  - x-api-key appears twice in some published code samples (once with a literal example
+    value, once as API_KEY), which is a docs-generation artefact rather than a real
+    two-key requirement.

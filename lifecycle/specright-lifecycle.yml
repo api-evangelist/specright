@@ -1,0 +1,128 @@
+generated: '2026-08-28'
+method: searched
+source: >-
+  developer.specright.com (Specright API v1.1.0 reference), www.specright.com blog release
+  posts, and live probes of api.specright.com / test.specright.com on 2026-08-28.
+name: Specright API lifecycle
+description: >-
+  Specright versions its API in the path and its product in numbered/seasonal releases
+  announced on the company blog. What it does not publish is any of the machinery a
+  consumer needs to plan around change: no deprecation policy, no sunset headers, no
+  status page, no SLA, and no per-operation deprecation markers.
+
+versioning:
+  scheme: path
+  current_path_version: v1
+  document_version: 1.1.0
+  base_url: https://api.specright.com/v1
+  first_released: '2020-02-13'
+  first_release_evidence: https://www.specright.com/blog/specright-announces-api-developer-portal/
+  note: >-
+    The API has carried the same /v1 path since the 2020 launch. The reference title tracks
+    a finer 1.1.0, but that number appears only in the rendered docs — it is not in a
+    header, a media type or a machine-readable document.
+  version_negotiation: none
+  version_header: none
+
+deprecation_policy:
+  published: false
+  url: null
+  sunset_header: false
+  deprecation_header: false
+  rfc8594: false
+  note: >-
+    Searched developer.specright.com, the API launch post and the marketing site. No
+    deprecation or sunset policy is published, and neither the Deprecation nor the Sunset
+    response header appears anywhere in the reference. No operation among the 46 is marked
+    deprecated.
+
+deprecated_operations: []
+deprecated_operation_count: 0
+
+status_page:
+  published: true
+  url: https://status.specright.com/
+  status: 200
+  vendor: Atlassian Statuspage
+  page_id: 631jgwsxm17q
+  time_zone: America/Los_Angeles
+  machine_readable:
+    - {url: 'https://status.specright.com/api/v2/status.json', status: 200}
+    - {url: 'https://status.specright.com/api/v2/summary.json', status: 200}
+    - {url: 'https://status.specright.com/history.atom', status: 404}
+    - {url: 'https://status.specright.com/history.rss', status: 404}
+  components:
+    - {name: Specright Core Platform, status: operational}
+    - {name: Specright API Services, status: operational}
+    - {name: Specright R&D Workbench, status: operational}
+    - {name: Informational Notices, status: operational}
+  observed_state:
+    indicator: none
+    description: All Systems Operational
+    checked: '2026-08-28'
+    open_incidents: 0
+    scheduled_maintenances: 0
+  subscription: Email notifications with OTP confirmation.
+  note: >-
+    A real, actively maintained Statuspage with a dedicated "Specright API Services"
+    component and a public JSON API an agent can poll unauthenticated. It also carries
+    third-party service notices (a Conga authentication disruption was posted and resolved
+    on 2026-08-25) and links out to Salesforce Platform Status, reflecting Specright's
+    Salesforce foundation.
+  discovery_gap: >-
+    Nothing links to it. https://www.specright.com/status/ returns 404, the status host is
+    not referenced from the marketing site navigation, the developer portal, or the API
+    reference. It was found only by probing the conventional subdomain. Surfacing it from
+    the developer portal would cost nothing and is the single cheapest documentation fix
+    available to Specright.
+
+sla:
+  published: false
+  note: >-
+    No uptime commitment, support-response target or SLA document is published. Pricing is
+    quote-only across all three tiers, so any SLA is presumably contractual.
+
+health_endpoints:
+  - url: https://api.specright.com/health
+    status: 200
+    body: HEALTHY
+    note: >-
+      An unauthenticated liveness endpoint on the production API host. Undocumented in the
+      reference but live and anonymous — the closest thing to a status signal Specright
+      offers, and usable by an agent as a reachability check.
+  - url: https://test.specright.com/health
+    status: 200
+    body: HEALTHY
+    note: Same endpoint on the sandbox host.
+
+environments:
+  - {name: production, base: 'https://api.specright.com/v1', status: live, probe: '401 Bearer at /v1'}
+  - {name: sandbox, base: 'https://test.specright.com/v1', status: live, probe: '401 at /v1'}
+
+product_releases:
+  cadence: >-
+    Numbered releases (18.0 through 24.0) through 2023, then seasonal releases (Spring,
+    Summer) from 2025 onward. Release 34 shipped as the Summer 2026 release.
+  channel: company blog
+  api_release_notes: false
+  note: >-
+    Product releases are announced as marketing blog posts about platform features. None of
+    them is an API changelog — no release post enumerates API changes, added operations or
+    breaking changes. See ../changelog/specright-changelog.yml.
+
+change_communication:
+  api_changelog: false
+  breaking_change_notice: none published
+  email_notification: not documented
+  note: >-
+    There is no published mechanism by which an API consumer learns that the API changed.
+    Because tenant field metadata is served live from the /definition endpoints, some schema
+    change reaches consumers without any announcement at all.
+
+gaps:
+  - No deprecation policy and no Sunset/Deprecation headers.
+  - The status page is real and good, but is not linked from any Specright property —
+    www.specright.com/status/ 404s and neither the docs nor the portal reference it.
+  - No SLA.
+  - No API-level changelog or release notes.
+  - The /health endpoints are live but undocumented.

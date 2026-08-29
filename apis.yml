@@ -1,18 +1,79 @@
 aid: specright
 name: Specright
-description: 'Specright is a company surfaced via the API Evangelist harvest backlog (source: secondary-market)
-  and added to the network as a stub for full-pipeline profiling.'
+description: >-
+  Specright is a specification data management (SDM) platform that centralizes the
+  specifications behind a physical product — raw materials, ingredients, formulas,
+  packaging components, finished goods and the bills of materials that connect them — and
+  shares them across a company's suppliers, co-manufacturers and internal teams. Founded in
+  2015 and headquartered in Tustin, California, the platform is built on Salesforce, which
+  surfaces directly in its API: records are addressed by Salesforce IDs or by a configurable
+  external ID, and field names carry the specright__*__c managed-package prefix. Specright
+  publishes a REST API at api.specright.com/v1 covering specifications, spec families,
+  suppliers, a generic object endpoint that reaches any configured Specright object, file
+  retrieval and asynchronous CSV bulk jobs, documented through a developer portal at
+  developer.specright.com. It also serves an OAuth-protected Model Context Protocol
+  endpoint from its marketing site.
+image: https://www.specright.com/wp-content/uploads/2026/04/AI-Specright-1-scaled.png
 url: https://raw.githubusercontent.com/api-evangelist/specright/refs/heads/main/apis.yml
 x-type: company
 x-source: harvest:secondary-market
-x-tier: stub
-x-tier-reason: harvest
 specificationVersion: '0.20'
 created: '2026-08-28'
 modified: '2026-08-28'
 tags:
 - Company
-apis: []
+- Specification Management
+- Supply Chain
+- Packaging
+- Product Lifecycle Management
+- Manufacturing
+- Sustainability
+- Supplier Collaboration
+- Bill of Materials
+- Salesforce
+- Enterprise Software
+apis:
+- name: Specright API
+  description: >-
+    REST API over Specright's specification data. Forty-six operations across six areas:
+    token issuance, specifications, spec families (BOM / finished good), suppliers, a
+    generic /objects/{api-name} endpoint that reaches any Specright object configured in
+    the tenant, and asynchronous bulk jobs. Every collection supports sparse fieldsets
+    (fields), JSON filter queries (filter), sort, and skip/limit pagination; every record
+    supports upsert against a configurable Salesforce external ID; and every object exposes
+    a /definition endpoint returning its field metadata. Authentication is an API key plus a
+    mandatory x-user-id acting-principal header, or a bearer token from POST /v1/token.
+  humanURL: https://developer.specright.com/
+  baseURL: https://api.specright.com/v1
+  tags:
+  - Specifications
+  - Spec Families
+  - Suppliers
+  - Bulk Operations
+  - Supply Chain
+  properties:
+  - type: Authentication
+    url: authentication/specright-authentication.yml
+  - type: OAuthScopes
+    url: scopes/specright-scopes.yml
+  - type: ErrorCatalog
+    url: errors/specright-error-codes.yml
+  - type: Conventions
+    url: conventions/specright-conventions.yml
+  - type: DataModel
+    url: data-model/specright-data-model.yml
+  - type: Lifecycle
+    url: lifecycle/specright-lifecycle.yml
+  - type: RateLimits
+    url: rate-limits/specright-rate-limits.yml
+  - type: Sandbox
+    url: sandbox/specright-sandbox.yml
+  - type: Conformance
+    url: conformance/specright-conformance.yml
+  - type: AgentSkill
+    url: skills/_index.yml
+  - type: APIReference
+    url: https://developer.specright.com/api-reference
 maintainers:
 - FN: Kin Lane
   email: kin@apievangelist.com
@@ -20,4 +81,63 @@ maintainers:
   email: info@apis.io
 common:
 - type: Website
-  url: https://www.nasdaqprivatemarket.com/
+  url: https://www.specright.com/
+- type: DeveloperPortal
+  url: https://developer.specright.com/
+- type: Documentation
+  url: https://developer.specright.com/
+- type: APIReference
+  url: https://developer.specright.com/api-reference
+- type: Pricing
+  url: https://www.specright.com/plans-pricing/
+- type: TermsOfService
+  url: https://www.specright.com/terms-of-use/
+- type: PrivacyPolicy
+  url: https://www.specright.com/privacy-notice/
+- type: Support
+  url: https://www.specright.com/customer-support/
+- type: Blog
+  url: https://www.specright.com/blog/
+- type: BlogRSS
+  url: https://www.specright.com/feed/
+- type: StatusPage
+  url: https://status.specright.com/
+- type: MCPServer
+  url: mcp/specright-mcp.yml
+- type: WellKnown
+  url: well-known/specright-well-known.yml
+- type: Authentication
+  url: authentication/specright-authentication.yml
+- type: OAuthScopes
+  url: scopes/specright-scopes.yml
+- type: ErrorCatalog
+  url: errors/specright-error-codes.yml
+- type: Conventions
+  url: conventions/specright-conventions.yml
+- type: DataModel
+  url: data-model/specright-data-model.yml
+- type: Lifecycle
+  url: lifecycle/specright-lifecycle.yml
+- type: ChangeLog
+  url: changelog/specright-changelog.yml
+- type: RateLimits
+  url: rate-limits/specright-rate-limits.yml
+- type: Plans
+  url: plans/specright-plans-pricing.yml
+- type: Sandbox
+  url: sandbox/specright-sandbox.yml
+- type: Conformance
+  url: conformance/specright-conformance.yml
+- type: Packages
+  url: packages/specright-packages.yml
+- type: AgentSkill
+  url: skills/_index.yml
+- type: LLMsTxt
+  url: llms/specright-llms.txt
+- type: DomainSecurity
+  url: security/specright-domain-security.yml
+x-enrichment:
+  date: '2026-08-28'
+  status: enriched
+  artifacts_added: 20
+  pass: local-v1

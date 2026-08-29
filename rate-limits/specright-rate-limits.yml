@@ -1,0 +1,54 @@
+generated: '2026-08-28'
+method: searched
+source: >-
+  developer.specright.com — the full Specright API v1.1.0 reference (all 46 operations and
+  their response tables), plus https://www.specright.com/plans-pricing/ and the 2020 API
+  launch post. Searched 2026-08-28.
+docs: https://developer.specright.com/api-reference
+name: Specright API rate limits
+description: >-
+  Specright publishes no rate limits. A full-text search of the API reference for "rate
+  limit", "429", "Retry-After", "quota" and "throttle" returned zero matches; no operation
+  documents a 429 response; and no rate-limit response header appears anywhere. The pricing
+  page attaches no call allowance to any tier. This is a complete absence of both the
+  documented number and the runtime signal.
+limit_count: 0
+limits: []
+headers:
+  request: []
+  response: []
+  documented: false
+  note: >-
+    No X-RateLimit-*, no RateLimit-* (RFC 9331 style), and no Retry-After. An agent has no
+    way to learn its remaining budget, and no way to learn how long to wait after being
+    throttled.
+exhaustion:
+  status_code: not documented
+  retry_after: not documented
+  note: >-
+    429 does not appear on any of the 46 operations. The documented error statuses are 400,
+    401, 403, 406 and 422 only — see ../errors/specright-error-codes.yml.
+burst: not documented
+concurrency: not documented
+quota_by_plan: not documented
+bulk_guidance:
+  note: >-
+    The API's answer to volume is the asynchronous bulk-job family (CSV upload, 202 Accepted,
+    poll for status) rather than a documented per-request rate. But no file-size ceiling, row
+    ceiling, concurrent-job limit or polling interval is published either, so the bulk path
+    is as unbounded on paper as the synchronous one.
+underlying_platform_note: >-
+  Specright runs on Salesforce, which enforces its own org-level API request limits. Those
+  limits are real and will be hit, but they are Salesforce's and are not surfaced, mapped or
+  even mentioned in Specright's reference — so a consumer cannot tell whether a failure is a
+  Specright limit, a Salesforce org limit, or neither. This is recorded as context, not as a
+  Specright-published limit.
+findings:
+  - >-
+    Zero published limits and zero runtime signalling. An agent cannot pace itself, cannot
+    detect throttling from a header, and cannot back off from a Retry-After.
+  - >-
+    Because pricing is quote-only, there is no plan-level allowance to infer a limit from
+    either.
+  - >-
+    Bulk endpoints exist but publish no size or concurrency ceiling.

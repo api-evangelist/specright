@@ -1,0 +1,120 @@
+generated: '2026-08-28'
+method: probed
+source: >-
+  https://www.specright.com/.well-known/oauth-protected-resource (200, RFC 9728),
+  https://www.specright.com/wp-json/mcp (200, WordPress REST route index), and a direct
+  JSON-RPC tools/list POST to both server routes on 2026-08-28.
+name: Specright MCP server
+description: >-
+  Specright serves two live Model Context Protocol endpoints from the WordPress REST API
+  behind its marketing site, www.specright.com. Both were discovered from the site's own
+  RFC 9728 protected-resource document and confirmed by direct JSON-RPC probe. Both are
+  OAuth-gated, so the live tool schemas could not be read anonymously.
+
+  IMPORTANT SCOPE NOTE: these MCP servers sit on the WordPress marketing site, not on the
+  Specright product API (api.specright.com). They are the WordPress MCP adapter surface —
+  an agent door onto site content and WordPress abilities — and there is no evidence that
+  they expose the specification, spec-family, supplier or bulk-job operations documented
+  at developer.specright.com. Do not read this artifact as "the Specright API has an MCP
+  server"; read it as "Specright's website serves MCP".
+
+deployment:
+  mode: remote
+  endpoint: https://www.specright.com/wp-json/mcp/mcp-oauth-server
+  auth: oauth
+  verified: probed
+
+servers:
+  - name: mcp-oauth-server
+    endpoint: https://www.specright.com/wp-json/mcp/mcp-oauth-server
+    transport: streamable-http
+    methods_allowed: [POST, GET, DELETE]
+    auth: oauth
+    status: live
+    probe:
+      request: 'POST {"jsonrpc":"2.0","id":1,"method":"tools/list"}'
+      http_status: 401
+      www_authenticate: >-
+        Bearer realm="https://www.specright.com",
+        resource_metadata="https://www.specright.com/.well-known/oauth-protected-resource"
+      note: >-
+        A textbook RFC 9728 challenge — the 401 names the protected-resource document,
+        which names the authorization server. Discovery works end to end anonymously;
+        only the tool list itself is gated.
+  - name: mcp-adapter-default-server
+    endpoint: https://www.specright.com/wp-json/mcp/mcp-adapter-default-server
+    transport: streamable-http
+    methods_allowed: [POST, GET, DELETE]
+    auth: wordpress-session
+    status: live
+    probe:
+      request: 'POST {"jsonrpc":"2.0","id":1,"method":"tools/list"}'
+      http_status: 401
+      body: '{"code":"rest_forbidden","message":"Sorry, you are not allowed to do that.","data":{"status":401}}'
+      note: >-
+        Rejects with the standard WordPress REST permission error rather than an OAuth
+        challenge, so this route expects a logged-in WordPress principal (cookie +
+        X-WP-Nonce) rather than a bearer token.
+
+discovery:
+  route_index:
+    url: https://www.specright.com/wp-json/mcp
+    status: 200
+    note: >-
+      GET returns the WordPress route descriptor for the "mcp" namespace, listing both
+      server routes and their allowed methods. This is an anonymous, machine-readable
+      index of the MCP surface.
+  protected_resource:
+    url: https://www.specright.com/.well-known/oauth-protected-resource
+    status: 200
+    resource: https://www.specright.com/wp-json/mcp/mcp-oauth-server
+    authorization_servers: ['https://www.specright.com']
+    bearer_methods_supported: [header]
+    scopes_supported: [mcp]
+  authorization_server:
+    url: https://www.specright.com/.well-known/oauth-authorization-server
+    status: 200
+    issuer: https://www.specright.com
+    authorization_endpoint: https://www.specright.com/oauth/authorize
+    token_endpoint: https://www.specright.com/oauth/token
+    revocation_endpoint: https://www.specright.com/oauth/revoke
+    grant_types_supported: [authorization_code, refresh_token]
+    code_challenge_methods_supported: [S256]
+    token_endpoint_auth_methods_supported: [none]
+    client_id_metadata_document_supported: true
+    scopes_supported: [mcp]
+
+tools:
+  status: gated
+  count: null
+  note: >-
+    tools/list returns 401 on both routes, so the real tool set and its inputSchemas could
+    not be read. NOTHING is recorded here — no derived candidate list, no guessed names.
+    Reading the live schemas requires an authenticated introspection with the "mcp" scope.
+
+findings:
+  - id: mcp-behind-robots-disallow
+    note: >-
+      https://www.specright.com/robots.txt contains "Disallow: /wp-json/", which covers the
+      MCP endpoint the site's own protected-resource document advertises. The discovery
+      documents under /.well-known/ are not disallowed, so a well-behaved agent can find
+      the server and is then told not to fetch it. Worth raising with the provider.
+  - id: mcp-is-website-not-product-api
+    note: >-
+      The MCP surface is the WordPress marketing site, not api.specright.com. The product
+      API (46 REST operations over specifications, spec families, suppliers, generic
+      objects and bulk jobs) has no MCP projection that could be found.
+  - id: no-derived-candidate-emitted
+    note: >-
+      A candidate tool list could have been derived from the 46 documented REST operations,
+      but a real server already exists at a different scope; emitting a derived candidate
+      alongside it would blur which surface an agent can actually reach.
+
+crosswalk:
+  emitted: false
+  reason: >-
+    A tool crosswalk binds MCP tools to backing OpenAPI operationIds. Neither side is
+    available here: the MCP tool list is OAuth-gated, and Specright publishes no OpenAPI
+    document (its reference is a client-rendered widdershins bundle with no machine-readable
+    source). The two surfaces are also disjoint — WordPress site content versus the
+    specification data API — so a name-and-semantics mapping would be fabrication.

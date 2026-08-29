@@ -1,0 +1,125 @@
+generated: '2026-08-28'
+method: probed
+source: >-
+  https://login.specright.com/realms/Specright/.well-known/openid-configuration (200,
+  fetched 2026-08-28) and
+  https://www.specright.com/.well-known/oauth-authorization-server (200, fetched 2026-08-28).
+name: Specright OAuth scopes
+description: >-
+  Specright runs two independent authorization servers with two independent scope
+  vocabularies. The Keycloak realm at login.specright.com backs the product API and
+  advertises 19 scopes, several of them Specright-specific rather than stock Keycloak. The
+  WordPress authorization server at www.specright.com backs the MCP endpoint and advertises
+  exactly one scope. Every scope below was read from a live discovery document; none were
+  inferred.
+
+  Specright publishes no scope reference page — there is no docs URL describing what these
+  scopes grant. The descriptions below distinguish stock OIDC/Keycloak scopes (whose
+  meaning is defined by the specs) from Specright's own, which are recorded by name only.
+
+authorization_servers:
+
+  - id: specright-product-api
+    issuer: https://login.specright.com/realms/Specright
+    discovery: https://login.specright.com/realms/Specright/.well-known/openid-configuration
+    status: 200
+    protects: https://api.specright.com/v1
+    scope_count: 19
+    scopes:
+      - name: specright-api
+        vendor_defined: true
+        description: >-
+          The scope the Specright developer portal itself requests when exchanging
+          credentials at the Keycloak token endpoint. Observed in the portal's own client
+          code as the API access scope. Specright publishes no definition of what it grants.
+      - name: specright-network
+        vendor_defined: true
+        description: Specright-defined. No published definition.
+      - name: supplier-network
+        vendor_defined: true
+        description: >-
+          Specright-defined. Name suggests the supplier-collaboration surface that backs
+          the /suppliers operations, but Specright publishes no definition.
+      - name: service_account
+        vendor_defined: true
+        description: >-
+          Specright-defined. Consistent with the client_credentials grant the realm
+          advertises — the machine-to-machine path an agent would use.
+      - name: automation_role
+        vendor_defined: true
+        description: Specright-defined. No published definition.
+      - name: organization
+        vendor_defined: true
+        description: Specright-defined. No published definition.
+      - name: standalone
+        vendor_defined: true
+        description: Specright-defined. No published definition.
+      - name: basic
+        vendor_defined: false
+        description: Keycloak built-in — adds sub and auth_time claims to the token.
+      - name: openid
+        vendor_defined: false
+        description: OpenID Connect Core. Required to receive an ID token.
+      - name: profile
+        vendor_defined: false
+        description: OIDC standard claim set — name, family_name, given_name, preferred_username.
+      - name: email
+        vendor_defined: false
+        description: OIDC standard — email and email_verified.
+      - name: address
+        vendor_defined: false
+        description: OIDC standard — the address claim.
+      - name: phone
+        vendor_defined: false
+        description: OIDC standard — phone_number and phone_number_verified.
+      - name: offline_access
+        vendor_defined: false
+        description: OIDC standard — requests a refresh token usable while the user is absent.
+      - name: roles
+        vendor_defined: false
+        description: Keycloak built-in — realm and client role mappings in the token.
+      - name: groups
+        vendor_defined: false
+        description: Keycloak built-in — group membership claim.
+      - name: web-origins
+        vendor_defined: false
+        description: Keycloak built-in — CORS allowed-origins claim.
+      - name: microprofile-jwt
+        vendor_defined: false
+        description: Keycloak built-in — Eclipse MicroProfile JWT claims (upn, groups).
+      - name: acr
+        vendor_defined: false
+        description: Keycloak built-in — authentication context class reference.
+
+  - id: specright-website-mcp
+    issuer: https://www.specright.com
+    discovery: https://www.specright.com/.well-known/oauth-authorization-server
+    status: 200
+    protects: https://www.specright.com/wp-json/mcp/mcp-oauth-server
+    scope_count: 1
+    scopes:
+      - name: mcp
+        vendor_defined: true
+        description: >-
+          The single scope guarding the WordPress MCP server. Also named in the RFC 9728
+          protected-resource document at
+          https://www.specright.com/.well-known/oauth-protected-resource. No sub-scopes,
+          so an agent granted "mcp" receives the whole tool surface undifferentiated.
+
+findings:
+  - >-
+    The product API's own reference never mentions OAuth scopes at all — it documents
+    API-key and bearer authentication and stops there. The scope vocabulary is only visible
+    by reading the Keycloak discovery document directly, which no Specright page links to.
+  - >-
+    The MCP authorization server offers exactly one coarse scope, so consent is
+    all-or-nothing for any agent connecting to it.
+  - >-
+    Seven of the 19 realm scopes are Specright-defined and undocumented. An integrator
+    cannot tell from any published source which scope grants which API capability.
+
+docs: null
+docs_note: >-
+  Searched developer.specright.com, www.specright.com/plans-pricing, the integrations
+  section and the 2020 API launch post. No scopes or permissions reference page is
+  published anywhere on Specright's public surface.

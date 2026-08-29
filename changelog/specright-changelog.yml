@@ -1,0 +1,99 @@
+generated: '2026-08-28'
+method: searched
+source: >-
+  https://www.specright.com/blog/ — Specright's product release posts. Each entry's date was
+  read from the article:published_time meta tag on the post itself, fetched 2026-08-28.
+docs: https://www.specright.com/blog/
+name: Specright product release notes
+description: >-
+  Specright publishes dated product release announcements as blog posts. This is a genuine,
+  dated, ongoing release surface — but it is a PRODUCT changelog, not an API changelog. No
+  entry below enumerates an API change, a new endpoint or a breaking change; the API's own
+  version has stayed at v1 since 2020 with no published change history.
+
+scheme:
+  style: >-
+    Numbered releases (18.0 to 24.0) through 2023, replaced by seasonal releases (Spring /
+    Summer + year) from 2025.
+  current: Summer 2026 (Release 34)
+  format: blog post
+  machine_readable: false
+  feed: https://www.specright.com/feed/
+  feed_status: 200
+  feed_note: >-
+    The site RSS feed carries all blog posts, release notes among them; there is no
+    release-only feed or category feed dedicated to changes.
+
+covers_api: false
+api_changelog_published: false
+
+entries:
+  - version: Summer 2026 (Release 34)
+    date: '2026-07-28'
+    url: https://www.specright.com/blog/whats-new-in-specright-summer-2026-release/
+    breaking: false
+    api_changes: none stated
+    highlights:
+      - Two new specialist agents added to the Specright AI Assistant.
+      - New capability in the R&D Workbench.
+      - An AI-assisted path for ingesting supplier data without forcing suppliers onto a template.
+  - version: Spring 2025
+    date: '2025-04-09'
+    url: https://www.specright.com/blog/spring-2025-product-release/
+    breaking: false
+    api_changes: none stated
+    highlights:
+      - Mass revision.
+      - Spec export improvements.
+  - version: Release 24.0
+    date: '2023-12-20'
+    url: https://www.specright.com/blog/product-release-24-0-blog/
+    breaking: false
+    api_changes: none stated
+  - version: Release 23.0
+    date: '2023-09-29'
+    url: https://www.specright.com/blog/specright-continues-to-expand-and-enhance-features-in-product-release-23-0/
+    breaking: false
+    api_changes: none stated
+    highlights:
+      - Plan for Every Part features.
+      - FDA supplier recall and inspection data integrations.
+      - Unit-of-measure conversion enhancements.
+  - version: Release 22.0
+    date: null
+    url: https://www.specright.com/blog/release-22-0-blog/
+    breaking: false
+    api_changes: none stated
+    note: Described by Specright as its largest release to date. Date not re-probed in this pass.
+  - version: Release 21.0
+    date: null
+    url: https://www.specright.com/blog/specification-data-management-product-release-21-0-blog/
+    breaking: false
+    api_changes: none stated
+  - version: Release 20.0
+    date: null
+    url: https://www.specright.com/blog/20-0-release-blog/
+    breaking: false
+    api_changes: none stated
+  - version: Release 18.0
+    date: null
+    url: https://www.specright.com/blog/new-to-specright-release-18-0/
+    breaking: false
+    api_changes: none stated
+
+related:
+  api_launch:
+    date: '2020-02-13'
+    url: https://www.specright.com/blog/specright-announces-api-developer-portal/
+    note: >-
+      The API and developer portal launch announcement. It promised "GraphQL support is
+      coming soon"; six years on, no GraphQL surface exists — probes of
+      api.specright.com/graphql and www.specright.com/graphql both returned 404.
+
+gaps:
+  - No API changelog. A consumer of api.specright.com has no dated record of what changed.
+  - Release notes are marketing posts, not structured change records — no added/changed/
+    removed sections, no version diff, no migration notes.
+  - Numbering discontinuity between the numbered series and the seasonal series is not
+    explained anywhere, so "Release 34" cannot be placed against "Release 24.0" from the
+    published record alone.
