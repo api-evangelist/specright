@@ -13,6 +13,23 @@ description: >-
   retrieval and asynchronous CSV bulk jobs, documented through a developer portal at
   developer.specright.com. It also serves an OAuth-protected Model Context Protocol
   endpoint from its marketing site.
+accessModel:
+  pricing: paid
+  onboarding: unknown
+  trial: false
+  try_now: false
+  public: false
+  label: Paid
+  confidence: high
+  source:
+  - plans
+  - authentication
+  - scopes
+  - rate-limits
+  - security
+  - sandbox
+  generated: '2026-09-03'
+  method: derived
 image: https://www.specright.com/wp-content/uploads/2026/04/AI-Specright-1-scaled.png
 url: https://raw.githubusercontent.com/api-evangelist/specright/refs/heads/main/apis.yml
 x-type: company
