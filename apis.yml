@@ -75,6 +75,12 @@ apis:
   humanURL: https://developer.specright.com/
   baseURL: https://api.specright.com/v1
   tags:
+  - Specification
+  - Spec Families
+  - Suppliers
+  - Bulk Operations
+  - Supply Chain
+  tags_raw:
   - Specifications
   - Spec Families
   - Suppliers
