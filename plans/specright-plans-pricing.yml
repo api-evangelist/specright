@@ -63,3 +63,28 @@ findings:
   - >-
     Because no tier states an API allowance, there is no published relationship between what
     a customer pays and what the API will let them do.
+x-canonical:
+  generated: '2026-10-08'
+  vocabulary: all/0-working/economics/plans-canonical.yml
+  models:
+  - metered
+  units: []
+  plans:
+  - name: Specright Foundations
+    access: other
+    model: metered
+    model_how: derived
+    units: []
+    periods: []
+  - name: Specright Plus
+    access: other
+    model: metered
+    model_how: derived
+    units: []
+    periods: []
+  - name: Specright Enterprise
+    access: other
+    model: metered
+    model_how: derived
+    units: []
+    periods: []
